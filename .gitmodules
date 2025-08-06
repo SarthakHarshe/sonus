@@ -1,0 +1,3 @@
+[submodule "backend/ACE-Step"]
+	path = backend/ACE-Step
+	url = git@github.com:ace-step/ACE-Step.git
