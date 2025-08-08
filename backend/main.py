@@ -1,10 +1,13 @@
 # Creating a new modal app
 
+import base64
+from typing import List
 import uuid
 import modal
 import os
 
 from pydantic import BaseModel
+import requests
 
 
 app = modal.App("sonus")
@@ -24,6 +27,29 @@ hf_volume = modal.Volume.from_name("qwen-hf-cache", create_if_missing=True)
 
 sonus_secrets = modal.Secret.from_name("sonus-secret")
 
+class AudioGenerationBase(BaseModel):
+    audio_duration: float = 180.0
+    seed: int = -1
+    guidance_scale: float = 15.0
+    infer_step: int = 60
+    instrumental: bool = False
+
+class GenerateFromDescriptionRequest(AudioGenerationBase):
+    full_described_song: str
+
+class GenerateWithCustomLyricsRequest(AudioGenerationBase):
+    prompt: str
+    lyrics: str
+
+class GenerateWithDescribedLyricsRequest(AudioGenerationBase):
+    prompt: str
+    described_lyrics: str
+
+class GenerateMusicResponseS3(BaseModel):
+    s3_key: str
+    cover_image_s3_key: str
+    categories: List[str]
+
 class GenerateMusicResponse(BaseModel):
     audio_data: str
 
@@ -38,7 +64,7 @@ class GenerateMusicResponse(BaseModel):
 class SonusServer:
     @modal.enter()
     def load_model(self):
-        from acestep.pipeline.ace_step import ACEStepPipeline
+        from acestep.pipeline_ace_step import ACEStepPipeline
         from transformers import AutoModelForCausalLM, AutoTokenizer
         from diffusers import AutoPipelineForText2Image
         import torch
@@ -71,7 +97,7 @@ class SonusServer:
     @modal.fastapi_endpoint(method="POST")
     def generate(self) -> GenerateMusicResponse:
         output_dir = "/tmp/outputs"
-        os.mkdir(output_dir, exist_ok = True)
+        os.makedirs(output_dir, exist_ok = True)
         output_path = os.path.join(output_dir, f"{uuid.uuid4()}.wav")
 
         self.music_model(
@@ -92,7 +118,30 @@ class SonusServer:
 
         return GenerateMusicResponse(audio_data=audio_b64)
 
+    @modal.fastapi_endpoint(method="POST")
+    def generate_from_description(self, request: GenerateFromDescriptionRequest) -> GenerateMusicResponseS3:
+        pass
+
+    @modal.fastapi_endpoint(method="POST")
+    def generate_with_lyrics(self, request: GenerateWithCustomLyricsRequest) -> GenerateMusicResponseS3:
+        pass
+
+    @modal.fastapi_endpoint(method="POST")
+    def generate_with_described_lyrics(self, request: GenerateWithDescribedLyricsRequest) -> GenerateMusicResponseS3:
+        pass
+
 
 @app.local_entrypoint()
 def main():
-    function_test.remote()
+    server = SonusServer()
+    endpoint_url = server.generate.get_web_url()
+
+    response = requests.post(endpoint_url)
+    response.raise_for_status()
+    result = GenerateMusicResponse(**response.json())
+
+    audio_bytes = base64.b64decode(result.audio_data)
+    output_filename = "generated.wav"
+    with open(output_filename, "wb") as f:
+        f.write(audio_bytes)
+    
