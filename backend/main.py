@@ -5,6 +5,7 @@ from typing import List
 import uuid
 import modal
 import os
+import boto3
 
 from pydantic import BaseModel
 import requests
@@ -154,6 +155,31 @@ class SonusServer:
         final_lyrics = "[instrumental]" if instrumental else lyrics
         print(f"Generated lyrics: \n{final_lyrics}")
         print(f"Prompt: \n{prompt}")
+
+        s3_client = boto3.client("S3")
+        bucket_name = os.environ("S3_BUCKET_NAME")
+
+        output_dir = "/tmp/outputs"
+        os.makedirs(output_dir, exist_ok= True)
+        output_path = os.path.join(output_dir, f"{uuid.uuid4()}.wav")
+
+        self.music_model(
+            prompt=prompt,
+            lyrics=final_lyrics,
+            audio_duration=audio_duration,
+            infer_step=infer_step,
+            guidance_scale=guidance_scale,
+            save_path=output_path
+        )
+
+        audio_s3_key = f"{uuid.uuid4()}.wav"
+        s3_client.upload_file(output_path, bucket_name, audio_s3_key)
+        os.remove(output_path)
+
+        #Thumbnail generation
+
+        #Category generation
+
 
     @modal.fastapi_endpoint(method="POST")
     def generate(self) -> GenerateMusicResponse:
