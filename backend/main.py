@@ -141,6 +141,14 @@ class SonusServer:
         
         # Run LLM inference and return that
         return self.prompt_qwen(full_prompt)
+
+    def generate_categories(self, description: str) -> List[str]:
+        prompt = f"Based on the following music description, list 3-5 relevant genres or categories as a comma-separated list. For example: Pop, Electronic, Sad, 80s. Description: '{description}'"
+
+        response_text = self.prompt_qwen(prompt)
+        categories = [cat.strip() for cat in response_text.split(",") if cat.strip()]
+        return categories
+
     
     def generate_and_upload_to_s3(
             self,
@@ -151,6 +159,7 @@ class SonusServer:
             infer_step: int,
             guidance_scale: float,
             seed: int,
+            description_for_categorization: str
     ) -> GenerateMusicResponseS3:
         final_lyrics = "[instrumental]" if instrumental else lyrics
         print(f"Generated lyrics: \n{final_lyrics}")
@@ -169,7 +178,8 @@ class SonusServer:
             audio_duration=audio_duration,
             infer_step=infer_step,
             guidance_scale=guidance_scale,
-            save_path=output_path
+            save_path=output_path,
+            manual_seed=str(seed)
         )
 
         audio_s3_key = f"{uuid.uuid4()}.wav"
@@ -177,8 +187,25 @@ class SonusServer:
         os.remove(output_path)
 
         #Thumbnail generation
+        thumbnail_prompt = f"{prompt}, album cover art"
+        image = self.image_pipe(prompt=thumbnail_prompt, num_inference_steps=2, guidance_scale=0.0).images[0]
+
+        image_output_path = os.path.join(output_dir, f"{uuid.uuid4()}.png")
+        image.save(image_output_path)
+
+        image_s3_key = f"{uuid.uuid4()}.png"
+        s3_client.upload_file(image_output_path, bucket_name, image_s3_key)
+        os.remove(image_output_path)
 
         #Category generation
+        categories = self.generate_categories(description_for_categorization)
+
+        return GenerateMusicResponseS3(
+            s3_key=audio_s3_key,
+            cover_image_s3_key=image_s3_key,
+            categories=categories
+        )
+
 
 
     @modal.fastapi_endpoint(method="POST")
