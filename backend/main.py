@@ -267,17 +267,9 @@ def main():
         guidance_scale=15
     )
 
-    # wk-ryL1jzzsfn0lxPs7yicr2d
-    # ws-pDTapwiqtlBvSSYX9mjoWR
-
-    headers = {
-        "Modal-Key": "wk-ryL1jzzsfn0lxPs7yicr2d",
-        "Modal-Secret": "ws-pDTapwiqtlBvSSYX9mjoWR"
-    }
-
     payload = request_data.model_dump()
 
-    response = requests.post(endpoint_url, json=payload, headers=headers)
+    response = requests.post(endpoint_url, json=payload)
     response.raise_for_status()
     result = GenerateMusicResponseS3(**response.json())
 
