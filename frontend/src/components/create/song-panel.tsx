@@ -8,6 +8,8 @@ import { Loader2, Music, Plus } from "lucide-react";
 import { Switch } from "../ui/switch";
 import { Badge } from "../ui/badge";
 import { toast } from "sonner";
+import { generateSong, type GenerateRequest } from "~/actions/generation";
+import { P } from "node_modules/better-auth/dist/shared/better-auth.nHRig-F9";
 
 const inspirationTags = [
   "80s synth-pop",
@@ -77,6 +79,41 @@ export function SongPanel() {
     }
 
     //Generate song
+    let requestBody: GenerateRequest;
+
+    if (mode === "simple") {
+      requestBody = {
+        fullDescribedSong: description,
+        instrumental,
+      };
+    } else {
+      const prompt = styleInput;
+      if (LyricsMode === "write") {
+        requestBody = {
+          prompt,
+          lyrics,
+          instrumental,
+        };
+      } else {
+        requestBody = {
+          prompt,
+          describedLyrics: lyrics,
+          instrumental,
+        };
+      }
+    }
+
+    try {
+      setLoading(true);
+      await generateSong(requestBody);
+      setDescription("");
+      setLyrics("");
+      setStyleInput("");
+    } catch (error) {
+      toast.error("Failed to generate song");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
