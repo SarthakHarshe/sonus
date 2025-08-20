@@ -25,3 +25,23 @@ export async function setPublishedStatus(songId: string, published: boolean) {
 
   revalidatePath("/create");
 }
+
+export async function renameSong(songId: string, newTitle: string) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) redirect("/auth/sign-in");
+
+  await db.song.update({
+    where: {
+      id: songId,
+      userId: session.user.id,
+    },
+    data: {
+      title: newTitle,
+    },
+  });
+
+  revalidatePath("/create");
+}
