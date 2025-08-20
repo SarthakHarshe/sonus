@@ -24,7 +24,8 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { RenameDialog } from "./rename-dialog";
-
+import { useRouter } from "next/navigation";
+import { usePlayerStore } from "~/stores/use-player-store";
 export interface Track {
   id: string;
   title: string | null;
@@ -46,6 +47,8 @@ export function TrackList({ tracks }: { tracks: Track[] }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadingTrackId, setLoadingTrackId] = useState<string | null>(null);
   const [trackToRename, setTrackToRename] = useState<Track | null>(null);
+  const router = useRouter();
+  const setTrack = usePlayerStore((state) => state.setTrack);
 
   const handleTrackSelect = async (track: Track) => {
     if (loadingTrackId) return;
@@ -53,9 +56,21 @@ export function TrackList({ tracks }: { tracks: Track[] }) {
     const playUrl = await getPlayUrl(track.id);
     setLoadingTrackId(null);
 
-    console.log(playUrl);
-
     // Play the song in the playbar
+    setTrack({
+      id: track.id,
+      title: track.title,
+      url: playUrl,
+      artwork: track.thumbnailUrl,
+      prompt: track.prompt,
+      createdByUserName: track.createdByUserName,
+    });
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    router.refresh();
+    setTimeout(() => setIsRefreshing(false), 1000);
   };
 
   const filteredTracks = tracks.filter(
@@ -81,7 +96,7 @@ export function TrackList({ tracks }: { tracks: Track[] }) {
             disabled={isRefreshing}
             variant="outline"
             size="sm"
-            onClick={() => {}}
+            onClick={handleRefresh}
           >
             {isRefreshing ? (
               <Loader2 className="mr-2 animate-spin" />
@@ -161,7 +176,7 @@ export function TrackList({ tracks }: { tracks: Track[] }) {
                     <div
                       key={track.id}
                       className="hover:bg-muted/50 flex cursor-pointer items-center gap-4 rounded-lg p-3 transition-colors"
-                      onClick={() => {}}
+                      onClick={() => handleTrackSelect(track)}
                     >
                       {/* Thumbnail */}
                       <div className="group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-md">
@@ -247,7 +262,15 @@ export function TrackList({ tracks }: { tracks: Track[] }) {
               }
             })
           ) : (
-            <></>
+            <div className="flex flex-col items-center justify-center pt-20 text-center">
+              <Music className="text-muted-foreground h-10 w-10" />
+              <h2 className="mt-4 text-lg font-semibold">No Music Yet</h2>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {searchQuery
+                  ? "No tracks match your search."
+                  : "Create your first song to get started."}
+              </p>
+            </div>
           )}
         </div>
       </div>
