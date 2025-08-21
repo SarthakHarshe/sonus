@@ -9,7 +9,7 @@ export default function BreadcrumbPageClient() {
   return (
     <BreadcrumbPage>
       {path === "/" && "Home"}
-      {path === "create" && "Create"}
+      {path === "/create" && "Create"}
     </BreadcrumbPage>
   );
 }
