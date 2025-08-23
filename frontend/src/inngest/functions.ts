@@ -13,7 +13,7 @@ export const generateSong = inngest.createFunction(
     onFailure: async ({ event, error }) => {
       await db.song.update({
         where: {
-          id: event?.data?.event?.data?.songId,
+          id: (event?.data?.event?.data as { songId: string }).songId,
         },
         data: {
           status: "failed",

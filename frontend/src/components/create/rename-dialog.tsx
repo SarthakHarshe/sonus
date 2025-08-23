@@ -41,7 +41,7 @@ export function RenameDialog({
           <DialogHeader>
             <DialogTitle>Rename Song</DialogTitle>
             <DialogDescription>
-              Enter a new name for your song. Click save when you're done.
+              Enter a new name for your song. Click save when you&apos;re done.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

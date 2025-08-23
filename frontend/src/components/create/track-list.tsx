@@ -75,7 +75,7 @@ export function TrackList({ tracks }: { tracks: Track[] }) {
 
   const filteredTracks = tracks.filter(
     (track) =>
-      track.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      track.title?.toLowerCase().includes(searchQuery.toLowerCase()) ??
       track.prompt?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
