@@ -102,24 +102,6 @@ npx prisma migrate deploy
 npm run dev
 ```
 
-Environment variables, all validated in `src/env.js`:
-
-```
-DATABASE_URL
-BETTER_AUTH_SECRET
-MODAL_KEY
-MODAL_SECRET
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY_ID        # note the trailing _ID, that is the actual name
-AWS_REGION
-S3_BUCKET_NAME
-GENERATE_FROM_DESCRIPTION       # the three deployed Modal endpoint URLs
-GENERATE_FROM_DESCRIBED_LYRICS
-GENERATE_WITH_LYRICS
-POLAR_ACCESS_TOKEN
-POLAR_WEBHOOK_SECRET
-```
-
 Run the Inngest dev server alongside `npm run dev` so jobs actually run. For testing Polar webhooks locally there is `npm run polar-webhooks`, which just opens an ngrok tunnel to port 3000.
 
 ## Credits and billing
