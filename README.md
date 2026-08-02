@@ -108,8 +108,6 @@ Run the Inngest dev server alongside `npm run dev` so jobs actually run. For tes
 
 New accounts start with 100 credits and each generated song costs 1, taken only after the generation succeeds. Buying more goes through Polar checkout, and the credit top-up happens in the `onOrderPaid` webhook.
 
-Worth knowing: the Polar client is hardcoded to `server: "sandbox"` and the three product IDs are hardcoded in `src/lib/auth.ts` and `src/components/sidebar/upgrade.tsx`. Swap both before this touches real money.
-
 ## Known limits
 
 - A three minute duration is fixed at queue time. The backend accepts an `audio_duration`, but the UI never exposes it.
